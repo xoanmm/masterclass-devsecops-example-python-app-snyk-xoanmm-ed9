@@ -1,0 +1,71 @@
+
+
+on:
+  workflow_run:
+    workflows:
+      - "Lint"
+    branches:
+      - '*'
+    types:
+      - completed
+
+env:
+  PYTHON_VERSION: '3.11.0'
+
+name: Test
+jobs:
+  unit-tests:
+    if: "${{ github.event.workflow_run.conclusion == 'success' && !contains(github.event.commits[0].message, 'chore(release):') }}"
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v2
+
+      - name: Setup Python
+        uses: actions/setup-python@v2
+        with:
+          python-version: ${{ env.PYTHON_VERSION }}
+
+      - name: Upgrade pip
+        run: pip3 install --upgrade pip
+
+      - name: Install python dependencies
+        run: pip3 install -r requirements.txt
+
+      - name: Run unit-tests
+        run: pytest -m "not integtest"
+
+  tests-e2e:
+    if: "${{ github.event.workflow_run.conclusion == 'success' && !contains(github.event.commits[0].message, 'chore(release):') }}"
+    runs-on: ubuntu-latest
+    needs: unit-tests
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v2
+
+      - name: Setup Python
+        uses: actions/setup-python@v2
+        with:
+          python-version: ${{ env.PYTHON_VERSION }}
+
+      - name: Upgrade pip
+        run: pip3 install --upgrade pip
+
+      - name: Install python dependencies
+        run: pip3 install -r requirements.txt
+
+      - name: Run MongoDB Container
+        run: |
+          docker run --name mongo -d -e MONGODB_ROOT_PASSWORD=${{ secrets.MONGODB_ROOT_PASSWORD}} -p 27017:27017 bitnami/mongodb:${{ env.MONGODB_VERSION }}
+        env:
+          MONGODB_VERSION: 4.4.13-debian-10-r30
+
+      - name: Check mongo is ready
+        run: |
+          ./tools/check_mongodb_is_ready.sh
+        shell: bash
+
+      - name: Run tests e2e
+        run: pytest -m integtest
+        env:
+          MONGODB_URL: "mongodb://${{ secrets.MONGODB_ROOT_USERNAME}}:${{ secrets.MONGODB_ROOT_PASSWORD}}@localhost:27017"

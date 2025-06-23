@@ -1,0 +1,80 @@
+on:
+  pull_request:
+    branches:
+      - '*'
+  push:
+    branches:
+      - '*'
+
+env:
+  PYTHON_VERSION: '3.11.0'
+
+name: Lint
+jobs:
+  lint-python-code:
+    runs-on: ubuntu-latest
+    name: "Lynt python code"
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Setup Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: ${{ env.PYTHON_VERSION }}
+
+      - name: Upgrade pip
+        run: pip3 install --upgrade pip
+
+      - name: Install necessary dependencies
+        run: pip3 install -r requirements.txt
+
+      - name: Run pre-commit
+        uses: pre-commit/action@v3.0.1
+        with:
+          extra_args: "-a -v"
+  security:
+    runs-on: ubuntu-latest
+    name: "Security Snyk Checks"
+    permissions:
+      actions: read
+      contents: read
+      security-events: write
+    needs:
+      - lint-python-code
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: 16
+
+      - name: Get npm cache directory
+        id: npm-cache-dir
+        shell: bash
+        run: echo "dir=$(npm config get cache)" >> ${GITHUB_OUTPUT}
+
+      - uses: actions/cache@v3
+        id: npm-cache # use this to check for `cache-hit` ==> if: steps.npm-cache.outputs.cache-hit != 'true'
+        with:
+          path: ${{ steps.npm-cache-dir.outputs.dir }}
+          key: ${{ runner.os }}-node-${{ hashFiles('**/package-lock.json') }}
+          restore-keys: |
+            ${{ runner.os }}-node-
+
+      - name: Install dependencies
+        run: npm install
+
+      - name: Run Snyk to check for vulnerabilities
+        uses: snyk/actions/python@0.4.0
+        env:
+          SNYK_TOKEN: ${{ secrets.SNYK_TOKEN }}
+        with:
+          args: --sarif-file-output=snyk.sarif --all-projects
+
+      - name: Upload result to GitHub Code Scanning
+        uses: github/codeql-action/upload-sarif@v3
+        if: ${{ always() }}
+        with:
+          sarif_file: snyk.sarif
