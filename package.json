@@ -1,12 +1,13 @@
 {
   "name": "masterclass-devsecops-example-python-app-snyk",
   "dependencies": {
-    "@semantic-release/exec": "6.0.2",
+    "@semantic-release/exec": "7.1.0",
     "@semantic-release/git": "10.0.1",
-    "@semantic-release/github": "8.0.2",
-    "@semantic-release/release-notes-generator": "10.0.3",
-    "@semantic-release/changelog": "6.0.1",
-    "semantic-release": "^19.0.2"
+    "@semantic-release/github": "11.0.3",
+    "@semantic-release/release-notes-generator": "14.0.3",
+    "@semantic-release/changelog": "6.0.3",
+    "semantic-release": "24.2.5",
+    "brace-expansion": "4.0.1"
   },
   "release": {
     "branches": [

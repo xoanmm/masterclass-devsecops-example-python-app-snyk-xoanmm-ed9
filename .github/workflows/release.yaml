@@ -30,9 +30,9 @@ jobs:
         run: sudo apt-get update && sudo apt-get install -y jq
 
       - name: Setup Node.js
-        uses: actions/setup-node@v1
+        uses: actions/setup-node@v4
         with:
-          node-version: 16
+          node-version: 20
 
       - name: Install dependencies
         run: npm install
@@ -61,12 +61,6 @@ jobs:
         id: get_version
         run: |
           echo VERSION=$(cat semantic_release_version.txt) >> $GITHUB_ENV
-
-      - name: Build and push Docker image
-        if: ${{ env.VERSION != '' }}
-        run: make publish
-        env:
-          VERSION: ${{ env.VERSION }}
 
       - name: Docker meta
         id: meta
