@@ -1,3 +1,10 @@
+## [1.0.1](https://github.com/xoanmm/masterclass-devsecops-example-python-app-snyk-xoanmm-ed9/compare/v1.0.0...v1.0.1) (2025-06-25)
+
+
+### Bug Fixes
+
+* add missing build platform for release ([b4601a7](https://github.com/xoanmm/masterclass-devsecops-example-python-app-snyk-xoanmm-ed9/commit/b4601a7541acc8c97e311dc0475c0a16becdea27))
+
 # 1.0.0 (2025-06-25)
 
 
